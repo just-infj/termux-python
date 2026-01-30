@@ -25,6 +25,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -49,6 +51,11 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.TermuxApp.DayNight.DarkActionBar"
         tools:targetApi="m">
+	<receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
+    		<intent-filter>
+        		<action android:name="android.intent.action.BOOT_COMPLETED" />
+    		</intent-filter>
+	</receiver>
 
         <activity
             android:name=".app.TermuxActivity"
